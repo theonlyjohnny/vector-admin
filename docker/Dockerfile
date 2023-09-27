@@ -58,8 +58,9 @@ RUN cd ./frontend/ && yarn install && yarn cache clean
 
 # Build the frontend
 FROM frontend-deps as build-stage
-RUN whoami
 COPY ./frontend/ ./frontend/
+USER root
+RUN chown -R anythingllm:anythingllm ./frontend
 RUN stat ./frontend/*
 RUN cd ./frontend/ && yarn build && yarn cache clean
 
