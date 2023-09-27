@@ -53,18 +53,20 @@ WORKDIR /app
 
 # Install frontend dependencies
 FROM base as frontend-deps
+RUN whoami
 COPY ./frontend/package.json ./frontend/yarn.lock ./frontend/
+RUN stat ./frontend/*
 RUN cd ./frontend/ && yarn install && yarn cache clean
-
-# Install server dependencies
-FROM base as server-deps
-COPY ./backend/package.json ./backend/yarn.lock ./backend/
-RUN cd ./backend/ && yarn install --production && yarn cache clean 
 
 # Build the frontend
 FROM frontend-deps as build-stage
 COPY ./frontend/ ./frontend/
 RUN cd ./frontend/ && yarn build && yarn cache clean
+
+# Install server dependencies
+FROM base as server-deps
+COPY ./backend/package.json ./backend/yarn.lock ./backend/
+RUN cd ./backend/ && yarn install --production && yarn cache clean
 
 # Setup the server
 FROM server-deps as production-stage
