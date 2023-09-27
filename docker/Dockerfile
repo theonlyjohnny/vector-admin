@@ -37,7 +37,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Create a group and user with specific UID and GID
 RUN groupadd -g $ARG_GID anythingllm && \
     useradd -u $ARG_UID -m -d /app -s /bin/bash -g anythingllm anythingllm && \
-    mkdir -p /app/frontend/ /app/backend/ /app/workers/ /app/document-processor/ && chown -R anythingllm:anythingllm /app
+    mkdir -p /app/frontend/ /app/backend/ /app/workers/ /app/document-processor/
+    # && chown -R anythingllm:anythingllm /app
 
 # Copy docker helper scripts
 COPY ./docker/docker-entrypoint.sh /usr/local/bin/
@@ -47,7 +48,7 @@ COPY ./docker/docker-healthcheck.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-healthcheck.sh
 
-USER anythingllm
+# USER anythingllm
 
 WORKDIR /app
 
@@ -59,8 +60,8 @@ RUN cd ./frontend/ && yarn install && yarn cache clean
 # Build the frontend
 FROM frontend-deps as build-stage
 COPY ./frontend/ ./frontend/
-USER root
-RUN chown -R anythingllm:anythingllm ./frontend
+# USER root
+# RUN chown -R anythingllm:anythingllm ./frontend
 RUN stat ./frontend/*
 RUN cd ./frontend/ && yarn build && yarn cache clean
 
@@ -78,9 +79,9 @@ COPY --from=build-stage /app/frontend/dist ./backend/public
 
 # Copy worker source files 
 COPY ./workers/ ./workers/
-USER root
-RUN chown -R anythingllm:anythingllm ./workers
-USER anythingllm
+# USER root
+# RUN chown -R anythingllm:anythingllm ./workers
+# USER anythingllm
 
 # Install worker dependencies
 RUN cd /app/workers && \
@@ -98,10 +99,10 @@ RUN cd /app/document-processor && \
     pip install --no-cache-dir -r requirements.txt
 
 # Create placeholder database files from .placeholderdb files in /storage.
-USER root
+# USER root
 COPY ./backend/storage/job_queue.placeholderdb ./backend/storage/job_queue.db
 COPY ./backend/storage/vdbms.placeholderdb ./backend/storage/vdbms.db
-RUN chown -R anythingllm:anythingllm ./backend/storage ./document-processor
+RUN chown -R anythingllm:anythingllm /app ./backend/storage ./document-processor ./frontend ./workers
 USER anythingllm
 
 # Setup the environment
